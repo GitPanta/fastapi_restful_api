@@ -26,7 +26,7 @@ def init_db() -> None:
                 is_active=True,
                 user_id=superuser.id,
             )
-            election = crud.create_election(db, election)
+            election = crud.create_election(db, election, user_id=superuser.id)
         
         rosters = db.query(models.Roster).all()
         if len(rosters) == 0:
@@ -35,4 +35,4 @@ def init_db() -> None:
                     name=f'Roster {i + 1}',
                     user_id=superuser.id
                 ))
-            rosters = crud.create_rosters(db, rosters)
+            rosters = crud.create_rosters(db, rosters, user_id=superuser.id)
