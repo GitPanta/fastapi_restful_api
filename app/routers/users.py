@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from sqlalchemy.orm import Session
 from typing import Annotated
 
@@ -25,15 +25,37 @@ def read_users(
 @router.get("/me/", response_model=schemas.User)
 def get_current_user(
     current_user: Annotated[
-        schemas.User,
-        Security(dependencies.get_current_user, scopes=security.PERMISSIONS[enums.UserRole.user])],
+        str,
+        Security(dependencies.verify_permissions, scopes=security.PERMISSIONS[enums.UserRole.user])
+    ],
+    db: Annotated[Session, Depends(dependencies.get_db)]
 ) -> schemas.User:
-    return current_user
+    user = crud.get_user_by_email(db=db, email=current_user)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    return user
 
 
-@router.get("/{username}")
-def read_user(username: str):
-    return {"username": username}
+@router.get("/{username}", response_model=schemas.User)
+def read_user(
+    username: str,
+    current_user: Annotated[
+        str,
+        Security(dependencies.verify_permissions, scopes=security.PERMISSIONS[enums.UserRole.super_admin])
+    ],
+    db: Annotated[Session, Depends(dependencies.get_db)],
+) -> schemas.User:
+    user = crud.get_user_by_email(db=db, email=username)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return user
 
 
 @router.post("/", response_model=schemas.User)

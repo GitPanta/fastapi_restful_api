@@ -31,11 +31,18 @@ def get_db():
         db.close()
 
 
-def get_current_user(
-    security_scopes: SecurityScopes,
-    token: Annotated[str, Depends(oauth2_scheme)],
-    db: Annotated[Session, Depends(get_db)],
-) -> schemas.User:
+def get_token_header(x_token: Annotated[str, Header()]):
+    if x_token != "fake-super-secret-token":
+        raise HTTPException(status_code=400, detail="X-Token header invalid")
+
+
+def get_query_token(token: str):
+    if token != "jessica":
+        raise HTTPException(status_code=400, detail="No Jessica token provided")
+
+
+
+def verify_permissions(security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)]):
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
     else:
@@ -47,16 +54,14 @@ def get_current_user(
     )
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username: str = payload.get("sub")
+        username = payload['sub']
         if username is None:
             raise credentials_exception
         token_scopes = payload.get("scopes", [])
-        token_data = schemas.TokenData(username=username, scopes=token_scopes)
+        token_data = schemas.TokenData(scopes=token_scopes, username=username)
     except (InvalidTokenError, ValidationError):
         raise credentials_exception
-    user = crud.get_user_by_email(db=db, email=username)
-    if user is None:
-        raise credentials_exception
+    
     for scope in security_scopes.scopes:
         if scope not in token_data.scopes:
             raise HTTPException(
@@ -64,16 +69,4 @@ def get_current_user(
                 detail="Not enough permissions",
                 headers={"WWW-Authenticate": authenticate_value},
             )
-    return user
-
-
-def get_token_header(x_token: Annotated[str, Header()]):
-    if x_token != "fake-super-secret-token":
-        raise HTTPException(status_code=400, detail="X-Token header invalid")
-
-
-def get_query_token(token: str):
-    if token != "jessica":
-        raise HTTPException(status_code=400, detail="No Jessica token provided")
-
-
+    return username
