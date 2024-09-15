@@ -31,7 +31,11 @@ def get_records_by_election(
 @router.post("/", response_model=list[schemas.Record])
 def create_records(
     records: Annotated[list[schemas.RecordCreate], Body()],
-    db: Annotated[Session, Depends(dependencies.get_db)]
+    db: Annotated[Session, Depends(dependencies.get_db)],
+    current_user: Annotated[
+        str,
+        Security(dependencies.verify_permissions, scopes=security.PERMISSIONS[enums.UserRole.admin]),
+    ],
 ) -> list[schemas.Record]:
     records = crud.create_records(db=db, records=records)
     return records
@@ -40,6 +44,10 @@ def create_records(
 @router.put("/")
 def set_roster_votes_count(
     record: Annotated[schemas.RecordBase, Body()],
-    db: Annotated[Session, Depends(dependencies.get_db)]
+    db: Annotated[Session, Depends(dependencies.get_db)],
+    current_user: Annotated[
+        str,
+        Security(dependencies.verify_permissions, scopes=security.PERMISSIONS[enums.UserRole.admin]),
+    ],
 ) -> None:
     crud.set_record_votes_count(db=db, record=record)
