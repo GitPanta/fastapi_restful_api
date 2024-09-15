@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 
 from app.core import schemas, dependencies, security
-from app.db import crud, enums
+from app.db import crud, enums, models
 
 
 router = APIRouter(
@@ -22,6 +22,10 @@ def get_rosters(db: Annotated[Session, Depends(dependencies.get_db)]) -> list[sc
 def create_election_rosters(
     rosters: Annotated[list[schemas.RosterCreate], Body()],
     db: Annotated[Session, Depends(dependencies.get_db)],
+    user: Annotated[
+        models.User,
+        Security(dependencies.get_current_user, scopes=security.PERMISSIONS[enums.UserRole.admin]),
+    ],
 ) -> schemas.Roster:
-    rosters = crud.create_rosters(db=db, rosters=rosters)
+    rosters = crud.create_rosters(db=db, rosters=rosters, user_id=user.id)
     return rosters

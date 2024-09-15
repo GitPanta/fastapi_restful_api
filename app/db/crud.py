@@ -119,12 +119,12 @@ def set_record_votes_count(db: Session, record: schemas.RecordBase) -> None:
     db.commit()
 
 
-def create_roster(db: Session, roster: schemas.RosterCreate) -> models.Roster:
+def create_roster(db: Session, roster: schemas.RosterCreate, user_id: int) -> models.Roster:
     db_roster = models.Roster(
         name=roster.name,
         is_active=roster.is_active,
-        created_by=roster.user_id,
-        modified_by=roster.user_id,
+        created_by=user_id,
+        modified_by=user_id,
     )
     db.add(db_roster)
     db.commit()
@@ -132,10 +132,10 @@ def create_roster(db: Session, roster: schemas.RosterCreate) -> models.Roster:
     return db_roster
 
 
-def create_rosters(db: Session, rosters: list[schemas.RosterCreate]) -> list[models.Roster]:
+def create_rosters(db: Session, rosters: list[schemas.RosterCreate], user_id: int) -> list[models.Roster]:
     db_rosters = []
     for roster in rosters:
-        db_roster = create_roster(db=db, roster=roster)
+        db_roster = create_roster(db=db, roster=roster, user_id=user_id)
         db_rosters.append(db_roster)
     return db_rosters
 

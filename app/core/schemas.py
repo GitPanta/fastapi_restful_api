@@ -58,7 +58,6 @@ class RosterBase(BaseModel):
 
 class RosterCreate(RosterBase):
     is_active: bool = True
-    user_id: int
 
 
 class Roster(RosterBase):
