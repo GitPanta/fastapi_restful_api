@@ -5,11 +5,11 @@ from app.db.enums import UserRole
 class ElectionBase(BaseModel):
     description: str | None = None
     seats_amount: int
+    is_active: bool = True
 
 
 class ElectionCreate(ElectionBase):
-    is_active: bool = True
-    user_id: int
+    pass
 
 
 class Election(ElectionBase):

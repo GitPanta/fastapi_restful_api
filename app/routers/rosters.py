@@ -23,6 +23,5 @@ def create_election_rosters(
     rosters: Annotated[list[schemas.RosterCreate], Body()],
     db: Annotated[Session, Depends(dependencies.get_db)],
 ) -> schemas.Roster:
-    # roster = crud.create_roster(db=db, roster=roster)
     rosters = crud.create_rosters(db=db, rosters=rosters)
     return rosters

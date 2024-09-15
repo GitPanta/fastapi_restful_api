@@ -24,19 +24,11 @@ def read_users(
 
 @router.get("/me/", response_model=schemas.User)
 def get_current_user(
-    current_user: Annotated[
-        str,
-        Security(dependencies.verify_permissions, scopes=security.PERMISSIONS[enums.UserRole.user])
+    user: Annotated[
+        schemas.User,
+        Security(dependencies.get_current_user, scopes=security.PERMISSIONS[enums.UserRole.user])
     ],
-    db: Annotated[Session, Depends(dependencies.get_db)]
 ) -> schemas.User:
-    user = crud.get_user_by_email(db=db, email=current_user)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
     return user
 
 

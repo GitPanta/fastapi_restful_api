@@ -15,7 +15,7 @@ from app.db.database import SessionLocal, engine
 
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="token",
+    tokenUrl="login",
     scopes={
         enums.UserRole.user: "Can view election results",
         enums.UserRole.admin: "User permissiones and can set election results",
@@ -29,6 +29,21 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def get_current_user(
+    security_scopes: SecurityScopes,
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[Session, Depends(get_db)],
+) -> schemas.User:
+    username = verify_permissions(security_scopes=security_scopes, token=token)
+    user = crud.get_user_by_email(db=db, email=username)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User not found"
+        )
+    return user
 
 
 def get_token_header(x_token: Annotated[str, Header()]):

@@ -5,13 +5,13 @@ from . import models
 from app.core import schemas, security
 
 
-def create_election(db: Session, election: schemas.ElectionCreate) -> models.Election:
+def create_election(db: Session, election: schemas.ElectionCreate, user_id: int) -> models.Election:
     db_election = models.Election(
         description=election.description,
         seats_amount=election.seats_amount,
         is_active=election.is_active,
-        created_by=election.user_id,
-        modified_by=election.user_id,
+        created_by=user_id,
+        modified_by=user_id,
     )
     db.add(db_election)
     db.commit()
@@ -23,8 +23,12 @@ def get_elections(db: Session) -> list[models.Election]:
     return db.query(models.Election).all()
 
 
-def end_election_count(db: Session, election_id: int) -> schemas.ElectionResults:
+def end_election_count(db: Session, election_id: int, user_id: int) -> schemas.ElectionResults:
     db_election = db.query(models.Election).filter(models.Election.id == election_id).first()
+    
+    if db_election is None:
+        return None
+    
     db_records = db.query(models.Record).filter(models.Record.election_id == election_id).all()
     
     seats_count = db_election.seats_amount
@@ -63,6 +67,7 @@ def end_election_count(db: Session, election_id: int) -> schemas.ElectionResults
         election_records.append(result)
     
     db_election.is_active = False
+    db_election.modified_by = user_id
     db.commit()
     election_results = schemas.ElectionResults(
         election_id = election_id,
@@ -72,9 +77,12 @@ def end_election_count(db: Session, election_id: int) -> schemas.ElectionResults
     return election_results
 
 
-def set_election_seats(db: Session, election: schemas.ElectionUpdateSeats) -> models.Election:
+def set_election_seats(db: Session, election: schemas.ElectionUpdateSeats, user_id: int) -> models.Election:
     db_election = db.query(models.Election).filter(models.Election.id == election.id).first()
+    if db_election is None:
+        return None
     db_election.seats_amount = election.seats_amount
+    db_election.modified_by = user_id
     db.commit()
     return db_election
 
@@ -127,15 +135,6 @@ def create_roster(db: Session, roster: schemas.RosterCreate) -> models.Roster:
 def create_rosters(db: Session, rosters: list[schemas.RosterCreate]) -> list[models.Roster]:
     db_rosters = []
     for roster in rosters:
-        # db_roster = models.Roster(
-        #     name=roster.name,
-        #     is_active=roster.is_active,
-        #     created_by=roster.user_id,
-        #     modified_by=roster.user_id,
-        # )
-        # db.add(db_roster)
-        # db.commit()
-        # db.refresh(db_roster)
         db_roster = create_roster(db=db, roster=roster)
         db_rosters.append(db_roster)
     return db_rosters

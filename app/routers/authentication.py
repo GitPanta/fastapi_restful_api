@@ -13,7 +13,7 @@ from app.db import crud
 router = APIRouter()
 
 
-@router.post("/token/")
+@router.post("/login/")
 def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(dependencies.get_db),
