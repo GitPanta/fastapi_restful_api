@@ -28,7 +28,6 @@ class Election(Base):
     created_by = Column(Integer, ForeignKey("users.id"))
     modified_by = Column(Integer, ForeignKey("users.id"))
     
-    # rosters = relationship("Roster", back_populates="election")
     results = relationship("Record", back_populates="election")
 
 
@@ -37,15 +36,11 @@ class Roster(Base):
     
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    # votes_amount = Column(Integer, nullable=False, default=0)
     is_active = Column(Boolean, nullable=False, default=False)
     date_creation = Column(DateTime, nullable=False, server_default=func.now())
     date_modified = Column(DateTime, nullable=False, server_default=func.now())
-    # election_id = Column(Integer, ForeignKey("elections.id"))
     created_by = Column(Integer, ForeignKey("users.id"))
     modified_by = Column(Integer, ForeignKey("users.id"))
-    
-    # election = relationship("Election", back_populates="rosters")
 
 
 class Record(Base):
