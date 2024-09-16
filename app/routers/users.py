@@ -47,8 +47,9 @@ def read_user(
 def create_user(
     user: schemas.UserCreate,
     db: Annotated[Session, Depends(dependencies.get_db)],
+    current_user: Annotated[str, Security(dependencies.get_current_user, scopes=security.PERMISSIONS[enums.UserRole.super_admin])]
 ) -> schemas.User:
-    db_user = crud.get_user_by_email(user.email)
+    db_user = crud.get_user_by_email(db=db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     return crud.create_user(db=db, user=user)
