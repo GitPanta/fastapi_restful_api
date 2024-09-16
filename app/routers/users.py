@@ -15,13 +15,6 @@ router = APIRouter(
 )
 
 
-@router.get("/")
-def read_users(
-    token: Annotated[str, Security(dependencies.oauth2_scheme, scopes=[enums.UserRole.super_admin])]
-):
-    return [{"username": "Rick"}, {"username": "Morty"}]
-
-
 @router.get("/me/", response_model=schemas.User)
 def get_current_user(
     user: Annotated[
